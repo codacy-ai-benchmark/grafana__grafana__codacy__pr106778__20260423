@@ -25,6 +25,10 @@ jobs:
         timeout-minutes: 20
         continue-on-error: true
 
+      - name: Fix Go coverage paths for Codacy
+        run: sed -i 's|github.com/grafana/grafana/||g' unit.cov || true
+        if: always()
+
       - name: Upload coverage to Codacy
         uses: codacy/codacy-coverage-reporter-action@v1
         if: always()
