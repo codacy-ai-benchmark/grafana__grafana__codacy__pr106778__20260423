@@ -3,16 +3,31 @@ on:
   push:
     branches: ["main"]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   coverage:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install system deps
+        run: sudo apt-get update -q && sudo apt-get install -y build-essential shared-mime-info
+
+      - name: Run Go unit tests with coverage
+        run: go test -short -coverprofile=unit.cov -covermode=atomic ./pkg/...
+        timeout-minutes: 20
+        continue-on-error: true
+
       - name: Upload coverage to Codacy
         uses: codacy/codacy-coverage-reporter-action@v1
+        if: always()
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: ""
-        continue-on-error: true
+          coverage-reports: unit.cov
