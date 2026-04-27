@@ -25,8 +25,11 @@ jobs:
         timeout-minutes: 20
         continue-on-error: true
 
-      - name: Fix Go coverage paths for Codacy
-        run: sed -i 's|github.com/grafana/grafana/||g' unit.cov || true
+      - name: Convert Go coverage to LCOV for Codacy
+        run: |
+          go install github.com/jandelgado/gcov2lcov@latest
+          $(go env GOPATH)/bin/gcov2lcov -infile unit.cov -outfile coverage.lcov
+          sed -i 's|SF:github.com/grafana/grafana/|SF:|g' coverage.lcov
         if: always()
 
       - name: Upload coverage to Codacy
@@ -34,4 +37,4 @@ jobs:
         if: always()
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: unit.cov
+          coverage-reports: coverage.lcov
